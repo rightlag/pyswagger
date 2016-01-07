@@ -1,6 +1,7 @@
 # pyswagger
 
 pyswagger 0.1.0
+
 Released: 7-Jan-2016
 
 # Release Notes
@@ -17,11 +18,11 @@ Released: 7-Jan-2016
 
 # Introduction
 
-pyswagger is a Python toolkit that reads any JSON formatted [http://swagger.io/](Swagger) (Open API) schema and generates methods for the [http://swagger.io/specification/#operationObject](operations) defined in the schema.
+pyswagger is a Python toolkit that reads any JSON formatted [Swagger](http://swagger.io/) (Open API) schema and generates methods for the [operations](http://swagger.io/specification/#operationObject) defined in the schema.
 
 # Getting started
 
-To use the pyswagger client, import the `Swagger` class from the `swagger` module. The following example uses the [http://petstore.swagger.io/](Swagger Petstore) API.
+To use the pyswagger client, import the `Swagger` class from the `swagger` module. The following example uses the [Swagger Petstore](http://petstore.swagger.io/) API.
 
 ```python
 from swagger import Swagger
@@ -55,7 +56,7 @@ The `{petId}` placeholder is matched in the endpoint string and is replaced with
 
 # Requests containing a payload
 
-For requests that require a request payload, the `body` keyword argument can be passed as an argument to the method. The value of the `body` argument *should* be [https://en.wikipedia.org/wiki/Serialization](serialized). The following example simulates a `POST` request that will create a new pet:
+For requests that require a request payload, the `body` keyword argument can be passed as an argument to the method. The value of the `body` argument *should* be [serialized](https://en.wikipedia.org/wiki/Serialization). The following example simulates a `POST` request that will create a new pet:
 
 ```python
 from swagger import Swagger
@@ -91,10 +92,10 @@ The example above  also includes the `auth` keyword argument which is explained 
 
 # Authenticated endpoints
 
-Authentication is sometimes required to access some or all endpoints of a web API. Since pyswagger is a client-side toolkit, it does not support authentication schemes such as [https://en.wikipedia.org/wiki/OAuth](OAuth). However, if the endpoint requires an access token to make a request, then the `auth` keyword argument can be supplied.
+Authentication is sometimes required to access some or all endpoints of a web API. Since pyswagger is a client-side toolkit, it does not support authentication schemes such as [OAuth](https://en.wikipedia.org/wiki/OAuth). However, if the endpoint requires an access token to make a request, then the `auth` keyword argument can be supplied.
 
 ## Using the `auth` keyword argument
 
-Swagger uses [http://swagger.io/specification/#securityDefinitionsObject](Security Definitions) to define security schemes available to be used in the specification. The `in` field states the location of the API key which is either the `query` or the `header`.
+Swagger uses [Security Definitions](http://swagger.io/specification/#securityDefinitionsObject) to define security schemes available to be used in the specification. The `in` field states the location of the API key which is either the `query` or the `header`.
 
 If a security definition exists in the schema, pyswagger inspects the value of the `in` field and automatically assigns it as a request header or a query parameter. Therefore, when using the `auth` keyword, it is not required to specify the location of the API key.
