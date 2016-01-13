@@ -12,7 +12,7 @@ class InvalidPathError(Exception):
         self.path = path
 
     def __str__(self):
-        return 'got unexpected path \'{}\''.format(self.path)
+        return 'Got unexpected path \'{}\''.format(self.path)
 
 
 class InvalidOperationError(KeyError):
@@ -20,7 +20,7 @@ class InvalidOperationError(KeyError):
         self.operation = operation
 
     def __str__(self):
-        return 'invalid operation \'{}\''.format(self.operation)
+        return 'Invalid operation \'{}\''.format(self.operation)
 
 
 class InvalidSecuritySchemeError(Exception):
@@ -28,11 +28,11 @@ class InvalidSecuritySchemeError(Exception):
         self.scheme = scheme
 
     def __str__(self):
-        return 'invalid security scheme \'{}\''.format(self.scheme)
+        return 'Invalid security scheme \'{}\''.format(self.scheme)
 
 
 class UnsupportedSchemeError(Exception):
-    """Exception for handling unsupported schemes"""
+    """Exception for handling unsupported schemes."""
     schemes = ('http', 'https', 'ws', 'wss',)
 
     def __init__(self, scheme, supported=schemes):
@@ -41,5 +41,5 @@ class UnsupportedSchemeError(Exception):
 
     def __str__(self):
         return (
-            '\'{}\' is not a supported scheme. Supported schemes are: {}'
+            '\'{}\' is not a supported scheme (Supported schemes are: \'{}\')'
         ).format(self.scheme, ', '.join([scheme for scheme in self.supported]))

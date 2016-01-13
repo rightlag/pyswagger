@@ -1,20 +1,26 @@
 # pyswagger
 
-pyswagger 0.1.0
+pyswagger 0.2.0
 
 Released: 7-Jan-2016
 
 # Release Notes
 
-  - **Current**
+  - **Release 0.2.0**
+    - Support for both token-based and HTTP basic authentication (e.g. `apiKey`, `basic`)
+    - Scheme is automatically assigned if not passed as an argument when issuing requests (e.g. `http`, `https`, `ws`, `wss`)
+    - Minor bug fixes
+
+  - **Release 0.1.0**
     - Reads Swagger schema specifications
     - Creates a `client` object used to instantiate requests to paths defined in the schema
     - Supports `apiKey` authentication
     - Supports common request methods (e.g. `GET`, `POST`, `PUT`, and `DELETE`)
 
   - **Roadmap**
-     - Support for OAuth (maybe) and basic authentication
-     - Support for Swagger schema specifications to be read from hosted sites instead of reading them from local device
+    - Automatically determine MIME type for content-negotiation if not specified when issuing requests
+    - Support for Swagger schema specifications to be read from hosted sites instead of reading them from local device
+    - ~~Support for OAuth (maybe) and basic authentication~~
 
 # Introduction
 
@@ -96,6 +102,28 @@ Authentication is sometimes required to access some or all endpoints of a web AP
 
 ## Using the `auth` keyword argument
 
-Swagger uses [Security Definitions](http://swagger.io/specification/#securityDefinitionsObject) to define security schemes available to be used in the specification. The `in` field states the location of the API key which is either the `query` or the `header`.
+Swagger uses [Security Definitions](http://swagger.io/specification/#securityDefinitionsObject) to define security schemes available to be used in the specification. For [token-based authentication](https://scotch.io/tutorials/the-ins-and-outs-of-token-based-authentication), The `in` field states the location of the API key which is either the `query` or the `header`. For [HTTP Basic Authentication](https://en.wikipedia.org/wiki/Basic_access_authentication), the `in` keyword is *not* defined.
 
-If a security definition exists in the schema, pyswagger inspects the value of the `in` field and automatically assigns it as a request header or a query parameter. Therefore, when using the `auth` keyword, it is not required to specify the location of the API key.
+If a token-based authentication security definition exists in the schema, pyswagger inspects the value of the `in` field and automatically assigns it as a request header or a query parameter. Therefore, when using the `auth` keyword, it is not required to specify the location of the API key.
+
+**Token authentication**
+
+To use token authentication, the `auth` keyword argument *should* be of type `str`.
+
+```python
+from swagger import Swagger
+
+client = Swagger.load('../schemas/petstore.json')
+res = client.get('/pet/{petId}', petId=2, auth='special-token')
+```
+
+**HTTP basic authentication**
+
+To use HTTP basic authentication, the `auth` keyword argument *should* be of type `tuple`.
+
+```python
+from swagger import Swagger
+
+client = Swagger.load('../schemas/petstore.json')
+res = client.get('/pet/{petId}', petId=2, auth=('username', 'password'))
+```
