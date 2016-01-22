@@ -34,7 +34,7 @@ class Swagger(object):
         """Set the `Accept` and `Content-Type` headers for the request.
 
         :type obj: dict
-        :param kwargs: Either the schema definition object or the
+        :param obj: Either the schema definition object or the
           operation object
         """
         if 'consumes' in obj:
@@ -157,8 +157,12 @@ class Swagger(object):
             scheme = self._get_scheme(scheme=scheme)
             fmt = kwargs.pop('format', self.DefaultFormat)
             if 'consumes' in operation:
-                index = operation['consumes'].index(fmt)
-                operation['index'] = index
+                try:
+                    index = operation['consumes'].index(fmt)
+                except ValueError:
+                    index = 0
+                finally:
+                    operation['index'] = index
             if 'security' in operation:
                 try:
                     auth = kwargs['auth']

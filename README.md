@@ -18,9 +18,10 @@ Released: 7-Jan-2016
     - Supports common request methods (e.g. `GET`, `POST`, `PUT`, and `DELETE`)
 
   - **Roadmap**
+    - `$ref` support
     - Automatically determine MIME type for content-negotiation if not specified when issuing requests
     - Support for Swagger schema specifications to be read from hosted sites instead of reading them from local device
-    - ~~Support for OAuth (maybe) and basic authentication~~
+    - ~~Support for OAuth~~
 
 # Introduction
 
