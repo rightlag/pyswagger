@@ -182,7 +182,7 @@ class Swagger(object):
                                     header = securityDefinitions[name]['name']
                                     self._session.headers[header] = auth
                                 else:
-                                    kwargs[name] = auth
+                                    kwargs[header] = auth
                             if securityDefinitions[name]['type'] == 'basic':
                                 auth = _basic_auth_str(*auth)
                                 self._session.headers['Authorization'] = auth
