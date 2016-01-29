@@ -28,7 +28,10 @@ class Swagger(object):
 
     @baseUri.setter
     def baseUri(self, value):
-        self._baseUri = value
+        if hasattr(self, 'basePath'):
+            self._baseUri = value + self.basePath
+        else:
+            self._baseUri = value
 
     def _set_headers(self, obj):
         """Set the `Accept` and `Content-Type` headers for the request.
@@ -103,7 +106,7 @@ class Swagger(object):
         :type path: str
         :param path: The absolute or relative path to the schema file
         """
-        path = os.path.join(os.path.dirname(__file__), path)
+        path = os.path.expanduser(path)
         if not os.path.exists(path):
             raise IOError('{} does not exist'.format(path))
         with open(path, 'rb') as fp:
