@@ -8,7 +8,7 @@ from swagger import Swagger
 class SwaggerTestCast(unittest.TestCase):
     def setUp(self):
         # Load the schema to create the client object.
-        self.client = Swagger.load('../schemas/petstore.json')
+        self.client = Swagger.load('/vagrant/pyswagger/schemas/petstore.json')
         self.data = {
             'id': 0,
             'category': {
