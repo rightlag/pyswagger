@@ -178,8 +178,9 @@ class Swagger(object):
                                 # value of the request header the `auth`
                                 # token, otherwise, pass it as a query
                                 # parameter.
-                                if name in self._session.headers:
-                                    self._session.headers[name] = auth
+                                if securityDefinitions[name]['in'] == 'header':
+                                    header = securityDefinitions[name]['name']
+                                    self._session.headers[header] = auth
                                 else:
                                     kwargs[name] = auth
                             if securityDefinitions[name]['type'] == 'basic':
