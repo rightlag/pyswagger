@@ -1,0 +1,249 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "GitLab API",
+    "description": "Move your app forward with the GitLab API",
+    "version": "1.0.0"
+  },
+  "host": "gitlab.cisco.com",
+  "schemes": [
+    "https",
+    "http"
+  ],
+  "basePath": "/api/v3",
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/users": {
+      "get": {
+        "summary": "API Endpoints for Spyglass",
+        "parameters": [
+          {
+            "name": "PRIVATE-TOKEN",
+            "in": "query",
+            "description": "this is the private token",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "this returns a list of users!",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/User"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/session": {
+      "get": {
+        "summary": "Session Data for Spyglass",
+        "parameters": [
+          {
+            "name": "PRIVATE-TOKEN",
+            "in": "query",
+            "description": "this is the private token",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "this returns your session metadata",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Session"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects": {
+      "get": {
+        "summary": "Projects data Structure for Spyglass",
+        "parameters": [
+          {
+            "name": "PRIVATE-TOKEN",
+            "in": "query",
+            "description": "this is the private token",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "this returns a list of projects!",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Projects"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "User": {
+      "properties": {
+        "id": {
+          "type": "number"
+        },
+        "username": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string"
+        },
+        "avatar_url": {
+          "type": "string"
+        }
+      }
+    },
+    "Session": {
+      "properties": {
+        "id": {
+          "type": "number"
+        },
+        "username": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "private_token": {
+          "type": "string"
+        },
+        "blocked": {
+          "type": "boolean"
+        },
+        "created_at": {
+          "type": "string"
+        },
+        "bio": {
+          "type": "string"
+        },
+        "skype": {
+          "type": "string"
+        },
+        "linkedin": {
+          "type": "string"
+        },
+        "twitter": {
+          "type": "string"
+        },
+        "website_url": {
+          "type": "string"
+        },
+        "dark_scheme": {
+          "type": "boolean"
+        },
+        "theme_id": {
+          "type": "number"
+        },
+        "is_admin": {
+          "type": "boolean"
+        },
+        "can_create_group": {
+          "type": "boolean"
+        },
+        "can_create_team": {
+          "type": "boolean"
+        },
+        "can_create_project": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Projects": {
+      "properties": {
+        "id": {
+          "type": "number"
+        },
+        "description": {
+          "type": "string"
+        },
+        "default_branch": {
+          "type": "string"
+        },
+        "public": {
+          "type": "boolean"
+        },
+        "visibility_level": {
+          "type": "number"
+        },
+        "ssh_url_to_repo": {
+          "type": "string"
+        },
+        "http_url_to_repo": {
+          "type": "string"
+        },
+        "web_url": {
+          "type": "string"
+        },
+        "tag_list": {
+          "type": "array"
+        },
+        "owner": {
+          "type": "object"
+        },
+        "name": {
+          "type": "string"
+        },
+        "name_with_namespace": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "path_with_namespace": {
+          "type": "string"
+        },
+        "issues_enabled": {
+          "type": "boolean"
+        },
+        "merge_requests_enabled": {
+          "type": "boolean"
+        },
+        "wiki_enabled": {
+          "type": "boolean"
+        },
+        "snippets_enabled": {
+          "type": "boolean"
+        },
+        "created_at": {
+          "type": "string"
+        },
+        "last_activity_at": {
+          "type": "string"
+        },
+        "creator_id": {
+          "type": "number"
+        },
+        "namespace": {
+          "type": "object"
+        },
+        "archived": {
+          "type": "boolean"
+        },
+        "avatar_url": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}
