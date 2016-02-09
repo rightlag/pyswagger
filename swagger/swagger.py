@@ -168,7 +168,7 @@ class Swagger(object):
                     operation['index'] = index
             if 'security' in operation:
                 try:
-                    auth = kwargs['auth']
+                    auth = kwargs.pop('auth')
                     securityDefinitions = self.securityDefinitions
                     for security in operation['security']:
                         for name in security.iterkeys():
@@ -186,7 +186,6 @@ class Swagger(object):
                             if securityDefinitions[name]['type'] == 'basic':
                                 auth = _basic_auth_str(*auth)
                                 self._session.headers['Authorization'] = auth
-                    kwargs.pop('auth')
                 except KeyError:
                     pass
             body = kwargs.pop('body', {})
