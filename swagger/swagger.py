@@ -20,6 +20,7 @@ class Swagger(object):
 
     def __init__(self):
         self._baseUri = None
+        self._timeout = 5
         self._session = requests.Session()
 
     @property
@@ -28,10 +29,18 @@ class Swagger(object):
 
     @baseUri.setter
     def baseUri(self, value):
+        baseUri = value
         if hasattr(self, 'basePath'):
-            self._baseUri = value + self.basePath
-        else:
-            self._baseUri = value
+            baseUri += self.basePath
+        self._baseUri = baseUri
+
+    @property
+    def timeout(self):
+        return self._timeout
+
+    @timeout.setter
+    def timeout(self, value):
+        self._timeout = float(value)
 
     def _set_headers(self, obj):
         """Set the `Accept` and `Content-Type` headers for the request.
@@ -201,13 +210,15 @@ class Swagger(object):
             # keyword argument dictionary and pass it as an argument
             # when issuing the request.
             try:
-                res = self._session.request(fn, url, params=kwargs, data=body)
+                res = self._session.request(fn, url, params=kwargs, data=body,
+                                            timeout=self._timeout)
             except requests.exceptions.SSLError:
                 # If the request fails via a `SSLError`, re-instantiate
                 # the request with the `verify` argument assigned  to
                 # `False`.
                 res = self._session.request(fn, url, params=kwargs, data=body,
-                                            verify=False)
+                                            verify=False,
+                                            timeout=self._timeout)
             if res.status_code not in range(200, 300):
                 # If the response status code is a non-2XX code, raise a
                 # `ResponseError`. The `reason` variable attempts to
