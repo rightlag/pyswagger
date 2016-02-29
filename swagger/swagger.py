@@ -20,7 +20,7 @@ class Swagger(object):
 
     def __init__(self):
         self._baseUri = None
-        self._timeout = 5
+        self._timeout = 10.0
         self._session = requests.Session()
 
     @property
@@ -50,16 +50,12 @@ class Swagger(object):
           operation object
         """
         if 'consumes' in obj:
-            try:
-                # Try to index the MIME type assigned in the request.
-                # If the MIME type does not exist, assign the index to 0
-                # and assign the `Content-Type` header to use the first
-                # index in the `consumes` list object.
-                index = obj.pop('index')
-            except KeyError:
-                index = 0
-            finally:
-                self._session.headers['Content-Type'] = obj['consumes'][index]
+            # Try to index the MIME type assigned in the request. If the
+            # MIME type does not exist, assign the index to 0 and assign
+            # the `Content-Type` header to use the first index in the
+            # `consumes` list object.
+            index = obj.pop('index', 0)
+            self._session.headers['Content-Type'] = obj['consumes'][index]
         if 'produces' in obj:
             self._session.headers['Accept'] = '*/*'
 
@@ -93,7 +89,7 @@ class Swagger(object):
         :type scheme: str
         :param scheme: The scheme name (http, https, ws, wss)
         """
-        if scheme:
+        if scheme is not None:
             try:
                 index = self.schemes.index(scheme)
             except ValueError:
@@ -115,12 +111,10 @@ class Swagger(object):
         :type path: str
         :param path: The absolute or relative path to the schema file
         """
+        instance = Swagger()
         path = os.path.expanduser(path)
-        if not os.path.exists(path):
-            raise IOError('{} does not exist'.format(path))
         with open(path, 'rb') as fp:
             schema = json.loads(fp.read())
-            instance = Swagger()
             # Assign the Swagger version to the client instance.
             instance.Version = schema.pop('swagger')
             for field, obj in schema.iteritems():
@@ -142,7 +136,7 @@ class Swagger(object):
             # Assign the global headers of the schema. Headers can be
             # overridden in the operation callback method.
             instance._set_headers(schema)
-            return instance
+        return instance
 
     def __getattr__(self, fn):
         def callback(self, *args, **kwargs):
@@ -159,13 +153,10 @@ class Swagger(object):
                 # exception.
                 raise InvalidPathError(path)
             operation = self.paths[path][fn]
-            try:
-                # If the `scheme` keyword argument is present, override
-                # the default scheme. Otherwise, use the default scheme
-                # for issuing the request.
-                scheme = kwargs['scheme']
-            except KeyError:
-                scheme = self.DefaultScheme
+            # If the `scheme` keyword argument is present, override the
+            # default scheme. Otherwise, use the default scheme for
+            # issuing the request.
+            scheme = kwargs.pop('scheme', self.DefaultScheme)
             scheme = self._get_scheme(scheme=scheme)
             fmt = kwargs.pop('format', self.DefaultFormat)
             if 'consumes' in operation:
@@ -241,8 +232,8 @@ class Swagger(object):
             raise InvalidOperationError(fn)
         return callback.__get__(self)
 
-    def __str__(self):
-        return '{}:{}'.format(self.__class__.__name__, self.host)
-
     def __repr__(self):
-        return str(self)
+        return '<%r: %r>' % (
+            self.__class__.__name__,
+            self._baseUri
+        )
