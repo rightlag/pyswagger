@@ -112,7 +112,10 @@ class Swagger(object):
         :param path: The absolute or relative path to the schema file
         """
         instance = Swagger()
-        path = os.path.expanduser(path)
+        if os.path.isabs(path):
+            path = os.path.expanduser(path)
+        else:
+            path = os.path.join(os.path.dirname(__file__), path)
         with open(path, 'rb') as fp:
             schema = json.loads(fp.read())
             # Assign the Swagger version to the client instance.
