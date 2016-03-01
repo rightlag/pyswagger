@@ -5,6 +5,7 @@ pyswagger 0.2.0
 Released: 7-Jan-2016
 
 [![Build Status](https://travis-ci.org/rightlag/pyswagger.svg?branch=master)](https://travis-ci.org/rightlag/pyswagger)
+[![Gitter](https://badges.gitter.im/rightlag/pyswagger.svg)](https://gitter.im/rightlag/pyswagger?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 # Release Notes
 
