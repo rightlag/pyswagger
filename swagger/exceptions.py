@@ -41,5 +41,7 @@ class UnsupportedSchemeError(Exception):
 
     def __str__(self):
         return (
-            '\'{}\' is not a supported scheme (Supported schemes are: \'{}\')'
-        ).format(self.scheme, ', '.join([scheme for scheme in self.supported]))
+            '\'{}\' is not a supported scheme (supported schemes are: \'{}\')'
+        ).format(
+            self.scheme, ', '.join([scheme for scheme in self.supported])
+        )

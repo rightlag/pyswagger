@@ -1,14 +1,10 @@
-import json
-import os
 import requests
 
 from requests.auth import _basic_auth_str
-from exceptions import (
-    SwaggerServerError,
-    InvalidPathError,
-    InvalidOperationError,
-    UnsupportedSchemeError
-)
+from .exceptions import SwaggerServerError
+from .exceptions import InvalidPathError
+from .exceptions import InvalidOperationError
+from .exceptions import UnsupportedSchemeError
 
 
 class Swagger(object):
@@ -66,7 +62,8 @@ class Swagger(object):
         :param schema: schema dictionary object
         """
         if 'securityDefinitions' in schema:
-            for auth, definition in schema['securityDefinitions'].iteritems():
+            for auth, definition in (
+                    list(schema['securityDefinitions'].items())):
                 if definition['type'] == 'apiKey':
                     parameterIn = definition['in']
                     if parameterIn == 'header':
@@ -105,40 +102,38 @@ class Swagger(object):
                 return self.schemes[0]
 
     @staticmethod
-    def load(path):
+    def load(url):
         """Load Swagger schema file and return a new client instance.
 
-        :type path: str
-        :param path: The absolute or relative path to the schema file
+        :type url: str
+        :param url: The URL to the Swagger schema
         """
+        res = requests.get(url)
+        if res.status_code not in list(range(200, 300)):
+            res.raise_for_status()
+        schema = res.json()
         instance = Swagger()
-        if os.path.isabs(path):
-            path = os.path.expanduser(path)
-        else:
-            path = os.path.join(os.path.dirname(__file__), path)
-        with open(path, 'rb') as fp:
-            schema = json.loads(fp.read())
-            # Assign the Swagger version to the client instance.
-            instance.Version = schema.pop('swagger')
-            for field, obj in schema.iteritems():
-                setattr(instance, field, obj)
-            if not hasattr(instance, 'schemes'):
-                instance.schemes = instance.DefaultSchemes
-            # If the scheme is not explicitly defined when issuing the
-            # request, the `DefaultScheme` is assigned.
-            instance.DefaultScheme = instance.schemes[0]
-            # Assign the `_baseUri` property of the client. The request
-            # protocol is assigned when issuing the request.
-            instance._baseUri = '{host}{basePath}'.format(
-                host=instance.host,
-                basePath=(
-                    instance.basePath if hasattr(instance, 'basePath') else ''
-                )
+        # Assign the Swagger version to the client instance.
+        instance.Version = schema.pop('swagger')
+        for field, obj in list(schema.items()):
+            setattr(instance, field, obj)
+        if not hasattr(instance, 'schemes'):
+            instance.schemes = instance.DefaultSchemes
+        # If the scheme is not explicitly defined when issuing the
+        # request, the `DefaultScheme` is assigned.
+        instance.DefaultScheme = instance.schemes[0]
+        # Assign the `_baseUri` property of the client. The request
+        # protocol is assigned when issuing the request.
+        instance._baseUri = '{host}{basePath}'.format(
+            host=instance.host,
+            basePath=(
+                instance.basePath if hasattr(instance, 'basePath') else ''
             )
-            instance._set_security_definitions(schema)
-            # Assign the global headers of the schema. Headers can be
-            # overridden in the operation callback method.
-            instance._set_headers(schema)
+        )
+        instance._set_security_definitions(schema)
+        # Assign the global headers of the schema. Headers can be
+        # overridden in the operation callback method.
+        instance._set_headers(schema)
         return instance
 
     def __getattr__(self, fn):
@@ -174,7 +169,7 @@ class Swagger(object):
                     auth = kwargs.pop('auth')
                     securityDefinitions = self.securityDefinitions
                     for security in operation['security']:
-                        for name in security.iterkeys():
+                        for name in list(security.keys()):
                             if securityDefinitions[name]['type'] == 'apiKey':
                                 # If the security object name key exists
                                 # in the request header, then assign the
@@ -213,7 +208,7 @@ class Swagger(object):
                 res = self._session.request(fn, url, params=kwargs, data=body,
                                             verify=False,
                                             timeout=self._timeout)
-            if res.status_code not in range(200, 300):
+            if res.status_code not in list(range(200, 300)):
                 # If the response status code is a non-2XX code, raise a
                 # `ResponseError`. The `reason` variable attempts to
                 # retrieve the `description` key if it is provided in
