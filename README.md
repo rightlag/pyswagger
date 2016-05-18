@@ -1,11 +1,8 @@
-# pyswagger
+# pyswagger [![Build Status](https://img.shields.io/travis/rightlag/pyswagger/master.svg?style=flat-square)](https://travis-ci.org/rightlag/pyswagger) [![Gitter](https://img.shields.io/gitter/room/nwjs/nw.js.svg?style=flat-square)](https://gitter.im/rightlag/pyswagger)
 
 pyswagger 0.2.0
 
 Released: 7-Jan-2016
-
-[![Build Status](https://travis-ci.org/rightlag/pyswagger.svg?branch=master)](https://travis-ci.org/rightlag/pyswagger)
-[![Gitter](https://badges.gitter.im/rightlag/pyswagger.svg)](https://gitter.im/rightlag/pyswagger?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 # Release Notes
 
@@ -30,16 +27,16 @@ Released: 7-Jan-2016
 
 pyswagger is a Python toolkit that reads any JSON formatted [Swagger](http://swagger.io/) (Open API) schema and generates methods for the [operations](http://swagger.io/specification/#operationObject) defined in the schema.
 
-# Getting started
+# Quickstart
 
 To use the pyswagger client, import the `Swagger` class from the `swagger` module. The following example uses the [Swagger Petstore](http://petstore.swagger.io/) API.
 
 ```python
-from swagger import Swagger
-
-client = Swagger.load('../schemas/petstore.json')
-res = client.get('/pet/findByStatus', status='sold')
-print res.json()
+>>> from swagger import Swagger
+>>> client = Swagger.load('../schemas/petstore.json')
+>>> res = client.get('/pet/findByStatus', status='sold')
+>>> print res.json()
+[{u'category': {u'id': 1, u'name': u'Dogs'}, u'status': u'sold', u'name': u'Dog 2', u'tags': [{u'id': 1, u'name': u'tag2'}, {u'id': 2, u'name': u'tag3'}], u'photoUrls': [u'url1', u'url2'], u'id': 5}]
 ```
 
 This returns a list of `Pet` objects whose `status` attribute is assigned `sold`.
@@ -56,10 +53,10 @@ For endpoints that contain IDs (e.g. `/pet/2`), pyswagger uses string interpolat
 
 ```python
 from swagger import Swagger
-
-client = Swagger.load('../schemas/petstore.json')
-res = client.get('/pet/{petId}', petId=2)
-print res.json()
+>>> client = Swagger.load('../schemas/petstore.json')
+>>> res = client.get('/pet/{petId}', petId=2)
+>>> print res.json()
+{u'category': {u'id': 2, u'name': u'Cats'}, u'status': u'available', u'name': u'Cat 2', u'tags': [{u'id': 1, u'name': u'tag2'}, {u'id': 2, u'name': u'tag3'}], u'photoUrls': [u'url1', u'url2'], u'id': 2}
 ```
 
 The `{petId}` placeholder is matched in the endpoint string and is replaced with the value of the `petId` keyword argument.
@@ -69,31 +66,31 @@ The `{petId}` placeholder is matched in the endpoint string and is replaced with
 For requests that require a request payload, the `body` keyword argument can be passed as an argument to the method. The value of the `body` argument *should* be [serialized](https://en.wikipedia.org/wiki/Serialization). The following example simulates a `POST` request that will create a new pet:
 
 ```python
-from swagger import Swagger
-
-data = {
-    'id': 0,
-    'category': {
-        'id': 0,
-        'name': 'string',
-    },
-    'name': 'doggie',
-    'photoUrls': [
-        'string',
-    ],
-    'tags': [
-        {
-            'id': 0,
-            'name': 'string',
-        }
-    ],
-    'status': 'available',
-}
-# serialize the data in JSON format
-data = json.dumps(data)
-client = Swagger.load('../schemas/petstore.json')
-res = client.post('/pet', body=data, auth='special-key')
-print res.status_code
+>>> import json
+>>> from swagger import Swagger
+>>> data = {
+...     'id': 0,
+...     'category': {
+...         'id': 0,
+...         'name': 'string',
+...     },
+...     'name': 'doggie',
+...     'photoUrls': [
+...         'string',
+...     ],
+...     'tags': [
+...         {
+...             'id': 0,
+...             'name': 'string',
+...         }
+...     ],
+...     'status': 'available',
+... }
+>>> data = json.dumps(data)
+>>> client = Swagger.load('../schemas/petstore.json')
+>>> res = client.post('/pet', body=data, auth='special-key')
+>>> print res.status_code, res.reason
+200 OK
 ```
 
 **Note:** Some endpoints do not return a response body. Therefore, invoking the `.json()` method on the response object will raise an exception.
@@ -115,10 +112,9 @@ If a token-based authentication security definition exists in the schema, pyswag
 To use token authentication, the `auth` keyword argument *should* be of type `str`.
 
 ```python
-from swagger import Swagger
-
-client = Swagger.load('../schemas/petstore.json')
-res = client.get('/pet/{petId}', petId=2, auth='special-token')
+>>> from swagger import Swagger
+>>> client = Swagger.load('../schemas/petstore.json')
+>>> res = client.get('/pet/{petId}', petId=2, auth='special-token')
 ```
 
 **HTTP basic authentication**
@@ -126,8 +122,7 @@ res = client.get('/pet/{petId}', petId=2, auth='special-token')
 To use HTTP basic authentication, the `auth` keyword argument *should* be of type `tuple`.
 
 ```python
-from swagger import Swagger
-
-client = Swagger.load('../schemas/petstore.json')
-res = client.get('/pet/{petId}', petId=2, auth=('username', 'password'))
+>>> from swagger import Swagger
+>>> client = Swagger.load('../schemas/petstore.json')
+>>> res = client.get('/pet/{petId}', petId=2, auth=('username', 'password'))
 ```
