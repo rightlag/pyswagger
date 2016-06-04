@@ -8,6 +8,7 @@ Released: 7-Jan-2016
 
   - **Release 0.2.0**
     - Support for both token-based and HTTP basic authentication (e.g. `apiKey`, `basic`)
+    - Support for Swagger schema specifications to be read from hosted sites instead of reading them from local device
     - Scheme is automatically assigned if not passed as an argument when issuing requests (e.g. `http`, `https`, `ws`, `wss`)
     - Minor bug fixes
 
@@ -20,7 +21,6 @@ Released: 7-Jan-2016
   - **Roadmap**
     - `$ref` support
     - Automatically determine MIME type for content-negotiation if not specified when issuing requests
-    - Support for Swagger schema specifications to be read from hosted sites instead of reading them from local device
     - ~~Support for OAuth~~
 
 # Introduction
@@ -33,13 +33,15 @@ To use the pyswagger client, import the `Swagger` class from the `swagger` modul
 
 ```python
 >>> from swagger import Swagger
->>> client = Swagger.load('../schemas/petstore.json')
+>>> client = Swagger.load('http://petstore.swagger.io/v2/swagger.json')
 >>> res = client.get('/pet/findByStatus', status='sold')
 >>> print res.json()
 [{u'category': {u'id': 1, u'name': u'Dogs'}, u'status': u'sold', u'name': u'Dog 2', u'tags': [{u'id': 1, u'name': u'tag2'}, {u'id': 2, u'name': u'tag3'}], u'photoUrls': [u'url1', u'url2'], u'id': 5}]
 ```
 
 This returns a list of `Pet` objects whose `status` attribute is assigned `sold`.
+
+The `load()` method requires a URL to where the schema exists. The schema **must** be JSON formatted. In this example, the petstore schema is being loaded via a HTTP GET request and is then deserialized.
 
 The `status` keyword argument is located within the list of parameters of the `/pet/findByStatus` path in the `petstore.json` schema.
 
@@ -53,7 +55,7 @@ For endpoints that contain IDs (e.g. `/pet/2`), pyswagger uses string interpolat
 
 ```python
 from swagger import Swagger
->>> client = Swagger.load('../schemas/petstore.json')
+>>> client = Swagger.load('http://petstore.swagger.io/v2/swagger.json')
 >>> res = client.get('/pet/{petId}', petId=2)
 >>> print res.json()
 {u'category': {u'id': 2, u'name': u'Cats'}, u'status': u'available', u'name': u'Cat 2', u'tags': [{u'id': 1, u'name': u'tag2'}, {u'id': 2, u'name': u'tag3'}], u'photoUrls': [u'url1', u'url2'], u'id': 2}
@@ -87,7 +89,7 @@ For requests that require a request payload, the `body` keyword argument can be 
 ...     'status': 'available',
 ... }
 >>> data = json.dumps(data)
->>> client = Swagger.load('../schemas/petstore.json')
+>>> client = Swagger.load('http://petstore.swagger.io/v2/swagger.json')
 >>> res = client.post('/pet', body=data, auth='special-key')
 >>> print res.status_code, res.reason
 200 OK
@@ -113,7 +115,7 @@ To use token authentication, the `auth` keyword argument *should* be of type `st
 
 ```python
 >>> from swagger import Swagger
->>> client = Swagger.load('../schemas/petstore.json')
+>>> client = Swagger.load('http://petstore.swagger.io/v2/swagger.json')
 >>> res = client.get('/pet/{petId}', petId=2, auth='special-token')
 ```
 
@@ -123,6 +125,6 @@ To use HTTP basic authentication, the `auth` keyword argument *should* be of typ
 
 ```python
 >>> from swagger import Swagger
->>> client = Swagger.load('../schemas/petstore.json')
+>>> client = Swagger.load('http://petstore.swagger.io/v2/swagger.json')
 >>> res = client.get('/pet/{petId}', petId=2, auth=('username', 'password'))
 ```
