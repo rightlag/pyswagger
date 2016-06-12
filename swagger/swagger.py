@@ -1,15 +1,14 @@
 import requests
 
-from requests.auth import _basic_auth_str
+
+from urllib.parse import urlparse
 from .exceptions import SwaggerServerError
 from .exceptions import InvalidPathError
 from .exceptions import InvalidOperationError
-from .exceptions import UnsupportedSchemeError
 
 
 class Swagger(object):
     ResponseError = SwaggerServerError
-    DefaultSchemes = ('http', 'https', 'ws', 'wss',)
     DefaultFormat = 'application/json'
     DefaultOperations = ('get', 'put', 'post', 'delete', 'options', 'head',
                          'patch',)
@@ -24,8 +23,7 @@ class Swagger(object):
         return self._baseUri
 
     @baseUri.setter
-    def baseUri(self, value):
-        baseUri = value
+    def baseUri(self, baseUri):
         if hasattr(self, 'basePath'):
             baseUri += self.basePath
         self._baseUri = baseUri
@@ -35,10 +33,33 @@ class Swagger(object):
         return self._timeout
 
     @timeout.setter
-    def timeout(self, value):
-        self._timeout = float(value)
+    def timeout(self, timeout):
+        self._timeout = float(timeout)
 
-    def _set_headers(self, obj):
+    @property
+    def auth(self):
+        return self._session.auth
+
+    @auth.setter
+    def auth(self, auth):
+        for _, definition in list(self.securityDefinitions.items()):
+            if definition['type'] == 'apiKey':
+                parameterIn = definition['in']
+                if parameterIn == 'header':
+                    # Assign the `apiKey` header used for token
+                    # authentication.
+                    self._session.headers[definition['name']] = auth
+            elif definition['type'] == 'basic':
+                # Assign the `Authorization` header used for Basic
+                # authentication.
+                self._session.auth = auth
+
+    @property
+    def headers(self):
+        return self._session.headers
+
+    @headers.setter
+    def headers(self, obj):
         """Set the `Accept` and `Content-Type` headers for the request.
 
         :type obj: dict
@@ -55,52 +76,6 @@ class Swagger(object):
         if 'produces' in obj:
             self._session.headers['Accept'] = '*/*'
 
-    def _set_security_definitions(self, schema):
-        """Set the global security definitions for the schema.
-
-        :type schema: dict
-        :param schema: schema dictionary object
-        """
-        if 'securityDefinitions' in schema:
-            for auth, definition in (
-                    list(schema['securityDefinitions'].items())):
-                if definition['type'] == 'apiKey':
-                    parameterIn = definition['in']
-                    if parameterIn == 'header':
-                        # Assign the `apiKey` header used for token
-                        # authentication.
-                        self._session.headers[definition['name']] = None
-                    elif parameterIn == 'query':
-                        # If the `parameterIn` object is passed as a
-                        # query parameter, then do not assign it, for it
-                        # will be handled in the operation callback.
-                        pass
-                if definition['type'] == 'basic':
-                    # Assign the `Authorization` header used for Basic
-                    # authentication.
-                    self._session.headers['Authorization'] = None
-
-    def _get_scheme(self, scheme=None):
-        """Return the scheme to be used for issuing a request.
-
-        :type scheme: str
-        :param scheme: The scheme name (http, https, ws, wss)
-        """
-        if scheme is not None:
-            try:
-                index = self.schemes.index(scheme)
-            except ValueError:
-                # If the scheme does not exist, raise an
-                # `UnsupportedSchemeError` exception.
-                raise UnsupportedSchemeError(scheme, supported=self.schemes)
-            return self.schemes[index]
-        else:
-            if len(self.schemes) < 2:
-                # If the length of the `schemes` object is less than 2,
-                # then index the first scheme from the `schemes` object
-                # and return it.
-                return self.schemes[0]
-
     @staticmethod
     def load(url):
         """Load Swagger schema file and return a new client instance.
@@ -108,32 +83,28 @@ class Swagger(object):
         :type url: str
         :param url: The URL to the Swagger schema
         """
-        res = requests.get(url)
-        if res.status_code not in list(range(200, 300)):
-            res.raise_for_status()
-        schema = res.json()
+        response = requests.get(url)
+        if response.status_code not in list(range(200, 300)):
+            response.raise_for_status()
+        schema = response.json()
         instance = Swagger()
         # Assign the Swagger version to the client instance.
         instance.Version = schema.pop('swagger')
         for field, obj in list(schema.items()):
             setattr(instance, field, obj)
-        if not hasattr(instance, 'schemes'):
-            instance.schemes = instance.DefaultSchemes
-        # If the scheme is not explicitly defined when issuing the
-        # request, the `DefaultScheme` is assigned.
-        instance.DefaultScheme = instance.schemes[0]
         # Assign the `_baseUri` property of the client. The request
         # protocol is assigned when issuing the request.
-        instance._baseUri = '{host}{basePath}'.format(
+        url = urlparse(url)
+        instance._baseUri = '{scheme}://{host}{basePath}'.format(
+            scheme=url.scheme,
             host=instance.host,
             basePath=(
                 instance.basePath if hasattr(instance, 'basePath') else ''
             )
         )
-        instance._set_security_definitions(schema)
         # Assign the global headers of the schema. Headers can be
         # overridden in the operation callback method.
-        instance._set_headers(schema)
+        instance.headers = schema
         return instance
 
     def __getattr__(self, fn):
@@ -151,13 +122,8 @@ class Swagger(object):
                 # exception.
                 raise InvalidPathError(path)
             operation = self.paths[path][fn]
-            # If the `scheme` keyword argument is present, override the
-            # default scheme. Otherwise, use the default scheme for
-            # issuing the request.
-            scheme = kwargs.pop('scheme', self.DefaultScheme)
-            scheme = self._get_scheme(scheme=scheme)
-            fmt = kwargs.pop('format', self.DefaultFormat)
             if 'consumes' in operation:
+                fmt = kwargs.pop('format', self.DefaultFormat)
                 try:
                     index = operation['consumes'].index(fmt)
                 except ValueError:
@@ -165,65 +131,49 @@ class Swagger(object):
                 finally:
                     operation['index'] = index
             if 'security' in operation:
-                try:
+                if 'auth' in kwargs:
                     auth = kwargs.pop('auth')
-                    securityDefinitions = self.securityDefinitions
-                    for security in operation['security']:
-                        for name in list(security.keys()):
-                            if securityDefinitions[name]['type'] == 'apiKey':
-                                # If the security object name key exists
-                                # in the request header, then assign the
-                                # value of the request header the `auth`
-                                # token, otherwise, pass it as a query
-                                # parameter.
-                                if securityDefinitions[name]['in'] == 'header':
-                                    header = securityDefinitions[name]['name']
-                                    self._session.headers[header] = auth
-                                else:
-                                    kwargs[header] = auth
-                            if securityDefinitions[name]['type'] == 'basic':
-                                auth = _basic_auth_str(*auth)
-                                self._session.headers['Authorization'] = auth
-                except KeyError:
-                    pass
-            body = kwargs.pop('body', {})
-            # Override the default headers defined in the root schema.
-            self._set_headers(operation)
-            # Use string interpolation to replace placeholders with
-            # keyword arguments.
-            path = path.format(**kwargs)
-            url = (
-                '{scheme}://{baseUri}{path}'
-            ).format(scheme=scheme, baseUri=self._baseUri, path=path)
+                    self.auth = auth
             # If the `body` keyword argument exists, remove it from the
             # keyword argument dictionary and pass it as an argument
             # when issuing the request.
+            body = kwargs.pop('body', {})
+            # Override the default headers defined in the root schema.
+            self.headers = operation
+            # Use string interpolation to replace placeholders with
+            # keyword arguments.
+            path = path.format(**kwargs)
+            url = '{baseUri}{path}'.format(baseUri=self._baseUri, path=path)
             try:
-                res = self._session.request(fn, url, params=kwargs, data=body,
-                                            timeout=self._timeout)
+                response = self._session.request(
+                    fn, url, params=kwargs, data=body, timeout=self._timeout
+                )
             except requests.exceptions.SSLError:
                 # If the request fails via a `SSLError`, re-instantiate
                 # the request with the `verify` argument assigned  to
                 # `False`.
-                res = self._session.request(fn, url, params=kwargs, data=body,
-                                            verify=False,
-                                            timeout=self._timeout)
-            if res.status_code not in list(range(200, 300)):
+                response = self._session.request(
+                    fn, url, params=kwargs, data=body, verify=False,
+                    timeout=self._timeout
+                )
+            if response.status_code not in list(range(200, 300)):
                 # If the response status code is a non-2XX code, raise a
                 # `ResponseError`. The `reason` variable attempts to
                 # retrieve the `description` key if it is provided in
                 # the `response` object. Otherwise, the default response
                 # `reason` is used.
                 try:
-                    response = operation['responses'][str(res.status_code)]
-                    reason = response.get('description', res.reason)
-                    status_code, reason = res.status_code, reason
+                    reason = (
+                        operation['responses'][str(response.status_code)].get(
+                            'description', response.reason
+                        )
+                    )
                 except KeyError:
                     # Use the default `status_code` and `reason`
                     # returned from the response.
-                    status_code, reason = res.status_code, res.reason
-                raise self.ResponseError(status_code, reason)
-            return res
+                    reason = response.reason
+                raise self.ResponseError(response.status_code, reason)
+            return response
         if fn not in self.DefaultOperations:
             # If the method does not exist in the `DefaultOperations`,
             # raise an `InvalidOperationError` exception.
@@ -231,7 +181,4 @@ class Swagger(object):
         return callback.__get__(self)
 
     def __repr__(self):
-        return '<%r: %r>' % (
-            self.__class__.__name__,
-            self._baseUri
-        )
+        return '<{}: {}>'.format(self.__class__.__name__, self._baseUri)

@@ -21,27 +21,3 @@ class InvalidOperationError(KeyError):
 
     def __str__(self):
         return 'Invalid operation \'{}\''.format(self.operation)
-
-
-class InvalidSecuritySchemeError(Exception):
-    def __init__(self, scheme):
-        self.scheme = scheme
-
-    def __str__(self):
-        return 'Invalid security scheme \'{}\''.format(self.scheme)
-
-
-class UnsupportedSchemeError(Exception):
-    """Exception for handling unsupported schemes."""
-    schemes = ('http', 'https', 'ws', 'wss',)
-
-    def __init__(self, scheme, supported=schemes):
-        self.scheme = scheme
-        self.supported = supported
-
-    def __str__(self):
-        return (
-            '\'{}\' is not a supported scheme (supported schemes are: \'{}\')'
-        ).format(
-            self.scheme, ', '.join([scheme for scheme in self.supported])
-        )

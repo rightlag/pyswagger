@@ -24,7 +24,7 @@ class SwaggerTestCast(unittest.TestCase):
                 {
                     'id': 0,
                     'name': 'string',
-                }
+                },
             ],
             'status': 'available',
         }
@@ -32,56 +32,53 @@ class SwaggerTestCast(unittest.TestCase):
     @property
     def pet(self):
         data = json.dumps(self.data)
-        res = self.client.post('/pet', body=data, auth='special-key')
-        return res.json()
+        response = self.client.post('/pet', body=data, auth='special-key')
+        return response.json()
 
     def test_swagger_version(self):
         """Assert Swagger version is '2.0'"""
         self.assertEqual(self.client.Version, '2.0')
 
-    def test_swagger_default_scheme(self):
-        # Only scheme for `petstore.json` is `http`.
-        self.assertEqual(self.client.DefaultScheme, 'http')
-
     def test_create_pet_endpoint(self):
         data = json.dumps(self.data)
         expected_url = 'http://petstore.swagger.io/v2/pet'
-        res = self.client.post('/pet', body=data, auth='special-key')
-        self.assertEqual(res.url, expected_url)
-        self.assertTrue(isinstance(res.json(), dict))
-        self.assertEqual(res.status_code, 200)
+        response = self.client.post('/pet', body=data, auth='special-key')
+        self.assertEqual(response.url, expected_url)
+        self.assertTrue(isinstance(response.json(), dict))
+        self.assertEqual(response.status_code, 200)
 
     def test_get_pet_by_id_endpoint(self):
         petId = self.pet['id']
-        res = self.client.get('/pet/{petId}', petId=petId)
-        self.assertEqual(res.status_code, 200)
+        response = self.client.get('/pet/{petId}', petId=petId)
+        self.assertEqual(response.status_code, 200)
 
     def test_find_pets_by_status_endpoint(self):
         statuses = ('available', 'pending', 'sold',)
         for status in statuses:
-            res = self.client.get('/pet/findByStatus', status=status)
+            response = self.client.get('/pet/findByStatus', status=status)
             expected_url = (
                 'http://petstore.swagger.io/v2/pet/findByStatus?status={}'
             ).format(status)
-            self.assertEqual(res.url, expected_url)
-            self.assertEqual(res.status_code, 200)
-            self.assertTrue(isinstance(res.json(), list))
+            self.assertEqual(response.url, expected_url)
+            self.assertEqual(response.status_code, 200)
+            self.assertTrue(isinstance(response.json(), list))
 
     def test_find_pet_by_id_endpoint(self):
         petId = self.pet['id']
-        res = self.client.get('/pet/{petId}', petId=petId)
-        self.assertEqual(res.status_code, 200)
-        self.assertTrue(isinstance(res.json(), dict))
+        response = self.client.get('/pet/{petId}', petId=petId)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(isinstance(response.json(), dict))
 
     def test_pet_update_endpoint(self):
         petId = self.pet['id']
-        res = self.client.post('/pet/{petId}', petId=petId, name='foo',
-                               status='bar',
-                               format='application/x-www-form-urlencoded')
-        self.assertEqual(res.status_code, 200)
+        response = self.client.post(
+            '/pet/{petId}', petId=petId, name='foo', status='bar',
+            format='application/x-www-form-urlencoded'
+        )
+        self.assertEqual(response.status_code, 200)
 
     def test_delete_pet_endpoint(self):
         petId = self.pet['id']
-        res = self.client.delete('/pet/{petId}', petId=petId,
-                                 auth='special-key')
-        self.assertEqual(res.status_code, 200)
+        response = self.client.delete('/pet/{petId}', petId=petId,
+                                      auth='special-key')
+        self.assertEqual(response.status_code, 200)
