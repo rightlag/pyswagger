@@ -1,7 +1,12 @@
 import requests
 
 
-from urllib.parse import urlparse
+try:
+    # py3.x
+    from urllib.parse import urlparse
+except ImportError:
+    # py2.x
+    from urlparse import urlparse
 from .exceptions import SwaggerServerError
 from .exceptions import InvalidPathError
 from .exceptions import InvalidOperationError
