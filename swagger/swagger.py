@@ -64,22 +64,16 @@ class Swagger(object):
         return self._session.headers
 
     @headers.setter
-    def headers(self, obj):
+    def headers(self, schema):
         """Set the `Accept` and `Content-Type` headers for the request.
 
-        :type obj: dict
-        :param obj: Either the schema definition object or the
-          operation object
+        :type schema: dict
+        :param schema: The schema definition object
         """
-        if 'consumes' in obj:
-            # Try to index the MIME type assigned in the request. If the
-            # MIME type does not exist, assign the index to 0 and assign
-            # the `Content-Type` header to use the first index in the
-            # `consumes` list object.
-            index = obj.pop('index', 0)
-            self._session.headers['Content-Type'] = obj['consumes'][index]
-        if 'produces' in obj:
-            self._session.headers['Accept'] = '*/*'
+        if 'consumes' in schema:
+            self._session.headers['Content-Type'] = schema['consumes']
+        if 'produces' in schema:
+            self._session.headers['Accept'] = schema['produces']
 
     @staticmethod
     def load(url):
@@ -127,31 +121,31 @@ class Swagger(object):
                 # exception.
                 raise InvalidPathError(path)
             operation = self.paths[path][fn]
-            if 'consumes' in operation:
-                fmt = kwargs.pop('format', self.DefaultFormat)
-                try:
-                    index = operation['consumes'].index(fmt)
-                except ValueError:
-                    index = 0
-                finally:
-                    operation['index'] = index
             if 'security' in operation:
                 if 'auth' in kwargs:
                     auth = kwargs.pop('auth')
                     self.auth = auth
+            # Use string interpolation to replace placeholders with
+            # keyword arguments.
+            path = path.format(**kwargs)
+            url = '{baseUri}{path}'.format(baseUri=self._baseUri, path=path)
             # If the `body` keyword argument exists, remove it from the
             # keyword argument dictionary and pass it as an argument
             # when issuing the request.
             body = kwargs.pop('body', {})
             # Override the default headers defined in the root schema.
-            self.headers = operation
-            # Use string interpolation to replace placeholders with
-            # keyword arguments.
-            path = path.format(**kwargs)
-            url = '{baseUri}{path}'.format(baseUri=self._baseUri, path=path)
+            produces = kwargs.pop('produces', self.DefaultFormat)
+            if produces not in operation['produces']:
+                # The MIME type does not exist in the
+                # content-negotiation header.
+                return
+            headers = {
+                'Accept': produces,
+            }
             try:
                 response = self._session.request(
-                    fn, url, params=kwargs, data=body, timeout=self._timeout
+                    fn, url, params=kwargs, data=body, timeout=self._timeout,
+                    headers=headers
                 )
             except requests.exceptions.SSLError:
                 # If the request fails via a `SSLError`, re-instantiate
@@ -159,7 +153,7 @@ class Swagger(object):
                 # `False`.
                 response = self._session.request(
                     fn, url, params=kwargs, data=body, verify=False,
-                    timeout=self._timeout
+                    timeout=self._timeout, headers=headers
                 )
             if response.status_code not in list(range(200, 300)):
                 # If the response status code is a non-2XX code, raise a
